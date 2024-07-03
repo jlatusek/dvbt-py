@@ -5,9 +5,14 @@ description = "Implementation decoding of dvbt signal"
 authors = ["Jakub Latusek <jk.latusek@gmail.com>"]
 license = "GPL-3"
 readme = "README.md"
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.12"
+numpy = "^2.0.0"
+scipy = "^1.14.0"
+matplotlib = "^3.9.0"
+jupyterlab = "^4.2.3"
 jupyter = "^1.0.0"
 
 [tool.poetry.group.dev.dependencies]
