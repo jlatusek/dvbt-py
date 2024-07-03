@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "dvbt-py"
+version = "0.1.0"
+description = "Implementation decoding of dvbt signal"
+authors = ["Jakub Latusek <jk.latusek@gmail.com>"]
+license = "GPL-3"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+jupyter = "^1.0.0"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.5.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
