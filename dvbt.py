@@ -23,6 +23,13 @@ def dvb_channel_filter(data: np.array, draw=False):
         plt.ylabel("Gain")
         plt.grid(True)
         plt.show()
+        # Plot phase response
+        plt.plot(w / np.pi, np.unwrap(np.angle(h)))
+        plt.title("Filter Phase Response")
+        plt.xlabel("Frequency (Hz)")
+        plt.ylabel("Phase")
+        plt.grid(True)
+        plt.show()
     return filtered_data
 
 
