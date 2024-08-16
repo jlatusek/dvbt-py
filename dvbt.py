@@ -7,7 +7,7 @@ import numpy as np
 import scipy.io as sio
 import scipy.signal as signal
 
-from normalize import normalize_sig
+from dvbt.normalize import normalize_sig
 
 
 def dvb_channel_filter(data: np.array, draw=False):
@@ -41,10 +41,7 @@ N = len(data)
 n = np.linspace(-0.5, 0.5, N)
 
 
-# Plot fft of received data
-
-# In[19]:
-
+# %% Plot fft of received data
 
 plt.semilogy(n, np.abs(np.fft.fftshift(np.fft.fft(data))))
 plt.title("FFT of received data")
@@ -65,8 +62,7 @@ a1 = np.multiply(data[0], c[0])
 print(f"{a1=}")
 
 
-# In[21]:
-
+# %%
 
 plt.figure()
 plt.plot(n, 20 * np.log10(np.abs(np.fft.fft(data_low))))
@@ -75,7 +71,6 @@ plt.show()
 
 
 # %% Filter received data
-
 
 data_filtered = dvb_channel_filter(data_low, draw=True)
 plt.figure()
@@ -99,7 +94,6 @@ plt.title("Resampled data FFT")
 plt.show()
 
 
-# %% Find symbols
 # %% Find symbols
 
 symbol_per_block = 8192
@@ -131,7 +125,7 @@ plt.title("Peaks in correlation")
 plt.show()
 
 
-# In[27]:
+# %% Extract symbols
 symbol_end = np.arange(peaks[0][0] + frame_len, len(data_resampled), 8192 + 1024, dtype=int)
 data_no_guard = np.empty((len(symbol_end), 8192), dtype=complex)
 for idx, val in enumerate(symbol_end):
@@ -139,9 +133,6 @@ for idx, val in enumerate(symbol_end):
 
 data_af_fft = np.fft.fft(data_no_guard)
 data_af_fft = np.fft.fftshift(data_af_fft, axes=1)
-# % data_af_fft = ifft(data_no_guard);
-# % data_af_fft_sum = data_af_fft';
-# % data_af_fft_sum = data_af_fft(:);
 plt.figure(figsize=(10, 10))
 plt.plot(data_af_fft[0].real, data_af_fft[0].imag, ".")
 plt.title("Symbol po FFT")
@@ -150,7 +141,7 @@ plt.ylim([-3e5, 3e5])
 plt.show()
 
 
-# In[28]:
+# %% Remove zeros from the beginning and the end of the symbol
 
 full_symbols = data_af_fft
 # % symbols = fftshift(data_af_fft);

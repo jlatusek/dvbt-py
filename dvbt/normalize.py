@@ -1,7 +1,7 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
-from prbs import prbs
+from .prbs import prbs
 
 
 # %% Load data
