@@ -1549,6 +1549,21 @@ files = [
 ]
 
 [[package]]
+name = "mpld3"
+version = "0.5.10"
+description = "D3 Viewer for Matplotlib"
+optional = false
+python-versions = "*"
+files = [
+    {file = "mpld3-0.5.10-py3-none-any.whl", hash = "sha256:80877acce87ea447380fad7374668737505c8c0684aab05238e7c5dc1fab38c1"},
+    {file = "mpld3-0.5.10.tar.gz", hash = "sha256:a478eb404fa5212505c59133cf272cd9a94105872e605597720e7f84de38fbc7"},
+]
+
+[package.dependencies]
+jinja2 = "*"
+matplotlib = "*"
+
+[[package]]
 name = "nbclient"
 version = "0.10.0"
 description = "A client library for executing notebooks. Formerly nbconvert's ExecutePreprocessor."
@@ -2925,4 +2940,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.12, <3.13"
-content-hash = "f51e059d88b1ea3658687c9d466e03ee8aaebc084552719a0cc2a3ccb13c660d"
+content-hash = "336f5d73673d0fb06a7b2b5ac01fcd16e89355ed279d0de387ad306e446e51eb"
