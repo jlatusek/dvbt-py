@@ -167,7 +167,7 @@ plt.show()
 # %% Normalizowanie sygnału
 ind = 1
 l = 3
-normalize_sig(symbols[0], l)
+normalize_sig(symbols[0], l, draw=True)
 # for ind in range(len(symbols)):
 #     normalize_sig(symbols[ind], l)
 #     l = l + 1

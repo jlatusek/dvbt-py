@@ -12,7 +12,7 @@ def location_scattered(ll, pp) -> int:
     return kmin + 3 * (ll % 4) + 12 * pp
 
 
-def normalize_sig(sym, symbol_number):
+def normalize_sig(sym, symbol_number, draw=False):
     # % Input:        sym          = odebrany symbol
     # %               l            = numer symbolu
     # % Output: output = znomalizowany symbol
@@ -51,39 +51,22 @@ def normalize_sig(sym, symbol_number):
 
     prbs_sequence = prbs(np.ones([11, 1]))
     pilots_sequence = 4 / 3 * 2 * (1 / 2 - prbs_sequence)
-    ilor = np.array([])
-    for k in range(len(all_pilot)):
-        ilor = np.append(
-            ilor,
-            sym[int(all_pilot[k])] / pilots_sequence[int(all_pilot[k])],
-        )
+    ilor = sym[all_pilot] / pilots_sequence[all_pilot]
     xfit = np.arange(6817)
-    # interpol = np.interp(all_pilot, ilor, xfit, "linear")
     interpol = np.interp(xfit, all_pilot, ilor)
-    plt.figure(dpi=300)
-    plt.plot(abs(interpol))
-    plt.title("Estymacja kanału")
-    plt.show()
+    if draw:
+        plt.figure(dpi=300)
+        plt.plot(abs(interpol))
+        plt.title("Estymacja kanału")
+        plt.show()
 
-    # %%Normalizowanie; sygnału
+    # %% Signal normalization
 
-    data_normalized = np.array([])
-    for k in range(len(sym)):
-        # % data_normalized = [data_normalized symbols(k) / ilor(k)];
-        data_normalized = np.append(
-            data_normalized,
-            np.abs(sym[k]) * np.exp(1j * (np.angle(sym[k]) - np.angle(interpol[k]))),
-        )
-    plt.figure(dpi=300)
-    plt.plot(data_normalized.real, data_normalized.imag, ".", markersize=1)
-    plt.title("Symbol po kompensacji zmiany fazy")
-    plt.show()
-    data_normalized = np.array([])
-    for k in range(len(sym)):
-        data_normalized = np.append(data_normalized, sym[k] / interpol[k])
-        # % data_normalized = [data_normalized abs(sym(k)). * exp(j * (angle(sym(k)) - angle(interpol(k))))];
+    data_normalized = sym/interpol
 
-    plt.figure(dpi=300)
-    plt.plot(data_normalized.real, data_normalized.imag, ".", markersize=1)
-    plt.title("Symbol kompensacji kana³u")
-    plt.show()
+    if draw:
+        plt.figure(dpi=300)
+        plt.plot(data_normalized.real, data_normalized.imag, ".", markersize=1)
+        plt.title("Symbol kompensacji kana³u")
+        plt.show()
+    return data_normalized
