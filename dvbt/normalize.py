@@ -4,12 +4,26 @@ from matplotlib import pyplot as plt
 from .prbs import prbs
 
 
-# %% Load data
-
-
-def location_scattered(ll, pp) -> int:
+class ScatteredPilots:
     kmin = 0
-    return kmin + 3 * (ll % 4) + 12 * pp
+    kmax = 6816
+
+    def __init__(self, symbol_number):
+        self.symbol_number = symbol_number
+
+    def _generate_location(self, idx) -> int:
+        return self.kmin + 3 * (self.symbol_number % 4) + 12 * idx
+
+    @property
+    def locations(self):
+        locations = []
+        i = 0
+        last_location = self._generate_location(i)
+        while last_location <= self.kmax:
+            locations.append(last_location)
+            last_location = self._generate_location(i)
+            i += 1
+        return np.array(locations)
 
 
 def normalize_sig(sym, symbol_number, draw=False):
@@ -34,17 +48,9 @@ def normalize_sig(sym, symbol_number, draw=False):
         ]
     )
     # fmt: on
-    kmax = 6816
+    sp = ScatteredPilots(symbol_number)
 
-    p = 0
-    pilot_index_scattered = np.array([], dtype=int)
-    temp_index = location_scattered(symbol_number, p)
-    while temp_index <= kmax:
-        pilot_index_scattered = np.append(pilot_index_scattered, temp_index)
-        p = p + 1
-        temp_index = location_scattered(symbol_number, p)
-
-    all_pilot = np.append(pilot_index_continual, pilot_index_scattered)
+    all_pilot = np.append(pilot_index_continual, sp.locations)
     all_pilot = np.unique(all_pilot)
 
     # %%Tworzenie odpowiedzi impulsowej
@@ -62,11 +68,11 @@ def normalize_sig(sym, symbol_number, draw=False):
 
     # %% Signal normalization
 
-    data_normalized = sym/interpol
+    data_normalized = sym / interpol
 
     if draw:
         plt.figure(dpi=300)
         plt.plot(data_normalized.real, data_normalized.imag, ".", markersize=1)
-        plt.title("Symbol kompensacji kana³u")
+        plt.title("Symbol kompensacji kanału")
         plt.show()
     return data_normalized
