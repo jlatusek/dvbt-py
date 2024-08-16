@@ -1,8 +1,4 @@
 #!/usr/bin/env python
-# coding: utf-8
-
-# In[16]:
-
 
 from os.path import join as pjoin
 
@@ -12,9 +8,6 @@ import scipy.io as sio
 import scipy.signal as signal
 
 from normalize import normalize_sig
-
-
-# In[17]:
 
 
 def dvb_channel_filter(data: np.array, draw=False):
@@ -33,10 +26,7 @@ def dvb_channel_filter(data: np.array, draw=False):
     return filtered_data
 
 
-# Load data
-
-# In[18]:
-
+# %% Load data
 
 dvbt_data = sio.loadmat(pjoin("data", "dvbt.mat"))
 fc = dvbt_data["fc"][0][0]
@@ -61,10 +51,7 @@ plt.title("FFT of received data")
 plt.show()
 
 
-# Mix frequencies to lower frequency of examined signal
-
-# In[20]:
-
+# %% Mix frequencies to lower frequency of examined signal
 
 fo = 8e6 / fs
 k = np.arange(1, len(data) + 1)
@@ -87,9 +74,7 @@ plt.title("Lowered data FFT")
 plt.show()
 
 
-# Filter received data
-
-# In[22]:
+# %% Filter received data
 
 
 data_filtered = dvb_channel_filter(data_low, draw=True)
@@ -100,10 +85,7 @@ plt.xlim([-0.3, 0.3])
 plt.show()
 
 
-# Resampling
-
-# In[23]:
-
+# %% Resampling
 
 B = 8e6
 fs_dvb = 8 / 7 * B
@@ -111,21 +93,19 @@ data_resampled = signal.resample(data_filtered, int(N * fs_dvb / fs))
 # data_resampled = signal.resample_poly(data_filtered, int(fs_dvb), int(fs))
 N_resampled = len(data_resampled)
 n_resampled = np.linspace(-0.5, 0.5, N_resampled)
-plt.figure()
+plt.figure(dpi=300)
 plt.semilogy(n_resampled, np.abs(np.fft.fftshift(np.fft.fft(data_resampled))))
 plt.title("Resampled data FFT")
 plt.show()
 
 
-# Find symbols
-
-# In[24]:
-
+# %% Find symbols
+# %% Find symbols
 
 symbol_per_block = 8192
 guard_interval = 1 / 8
 guard_symbols = int(symbol_per_block * guard_interval)
-# frame_len = int(symbol_per_block + guard_symbols)
+frame_len = int(symbol_per_block + guard_symbols)
 correlation = np.zeros(N_resampled, dtype=complex)
 for i in range(N_resampled):
     if i + symbol_per_block + guard_symbols > N_resampled:
@@ -136,20 +116,13 @@ for i in range(N_resampled):
     correlation[i] = corr[0]
 
 
-# In[25]:
-
-
 plt.figure()
 plt.plot(np.abs(correlation))
 plt.title("Correlation of guards")
-plt.xlim([0000, 13000])
 plt.show()
 
 
-# Find peaks in data source signal to find beginning of each block
-
-# In[26]:
-
+# %% Find peaks in data source signal to find beginning of each block
 
 peaks = signal.find_peaks(np.abs(correlation), height=1e9, distance=symbol_per_block)
 plt.figure()
@@ -159,40 +132,44 @@ plt.show()
 
 
 # In[27]:
-
-
-symbol_end = np.arange(peaks[0][0] + 1024 + 8192, len(data_resampled), 8192 + 1024, dtype=int)
+symbol_end = np.arange(peaks[0][0] + frame_len, len(data_resampled), 8192 + 1024, dtype=int)
 data_no_guard = np.empty((len(symbol_end), 8192), dtype=complex)
 for idx, val in enumerate(symbol_end):
     data_no_guard[idx] = data_resampled[val - 8192 : val]
 
 data_af_fft = np.fft.fft(data_no_guard)
+data_af_fft = np.fft.fftshift(data_af_fft, axes=1)
 # % data_af_fft = ifft(data_no_guard);
 # % data_af_fft_sum = data_af_fft';
 # % data_af_fft_sum = data_af_fft(:);
-plt.figure()
+plt.figure(figsize=(10, 10))
 plt.plot(data_af_fft[0].real, data_af_fft[0].imag, ".")
 plt.title("Symbol po FFT")
+plt.xlim([-3e5, 3e5])
+plt.ylim([-3e5, 3e5])
+plt.show()
 
 
 # In[28]:
 
-
-symbols = np.fft.fftshift(data_af_fft)
+full_symbols = data_af_fft
 # % symbols = fftshift(data_af_fft);
-symbols = symbols[:, 688:]
-symbols = symbols[:, :6817]
+begin_remove = full_symbols[:, 0:688]
+end_remove = full_symbols[:, -687:]
+symbols = full_symbols[:, 688:-687]
 one_symbol = symbols[0]
-plt.figure()
+plt.figure(figsize=(10, 10))
 plt.plot(one_symbol.real, one_symbol.imag, ".")
 plt.title("Symbol po usunięciu zer")
+plt.xlim([-3e5, 3e5])
+plt.ylim([-3e5, 3e5])
+plt.show()  
 
 
-# In[29]:
-
-
+# %% Normalizowanie sygnału
 ind = 1
 l = 3
-for ind in range(len(symbols)):
-    normalize_sig(symbols[0], l)
-    l = l + 1
+normalize_sig(symbols[0], l)
+# for ind in range(len(symbols)):
+#     normalize_sig(symbols[ind], l)
+#     l = l + 1
