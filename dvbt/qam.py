@@ -3,9 +3,10 @@ from matplotlib import pyplot as plt
 
 
 class Qam:
-    def __init__(self, m: int = 64):
+    def __init__(self, m: int = 64, max_point_position: complex = 1.08 + 1.08j):
         points_in_row = int(np.sqrt(m))
         self._m = m
+        self._max_point_position = max_point_position
         self._bits = int(np.log2(m))
         self._constellation = np.array(
             [
@@ -14,23 +15,26 @@ class Qam:
                 for y in range(points_in_row - 1, -points_in_row, -2)
             ]
         )
+        self._constellation /= np.abs(self._constellation).max()
+        self._constellation *= np.abs(max_point_position)
+        # TODO make it more smart and based on received signal not magic numbers
+        # observed abs of received signal
+        # right now I don't have better idea how to do it
         self._gray_codes = self._assign_gray_code()
 
-    # TODO created function will hava a problem with demodulation of the signal
-    # with lots of noice and with values outliers
     def demodulate(self, signal: np.ndarray) -> np.ndarray:
-        signal /= np.abs(signal).max()
-        plt.figure()
-        plt.scatter(self._constellation.real, self._constellation.imag, color="red")
-        plt.title("Signal")
-        plt.show()
-        # Demodulate the signal
-        demodulated = np.zeros(len(signal), dtype=int)
+        """
+        Demodulate signal
+        TODO created function will hava a problem with demodulation of the signal
+            with lots of noice and with values outliers
+        :param signal: It is a signal to demodulate, it is assumed that it is a signal is properly normalized
+        :return: Demodulated signal
+        """
+        demodulated_indexes = np.zeros(len(signal), dtype=int)
         for i, s in enumerate(signal):
             distances = np.abs(s - self._constellation)
-            demodulated[i] = np.argmin(distances)
-
-        return demodulated
+            demodulated_indexes[i] = np.argmin(distances)
+        return self._gray_codes[demodulated_indexes]
 
     def draw_constellation(self):
         plt.figure()
@@ -75,10 +79,9 @@ class Qam:
             imag = gray_codes[imag_i]
             for j in range(self._bits):
                 even = j % 2 == 0
-                # 0 1 3 2
+                assigment_codes[i] <<= 1
                 if even:
-                    assigment_codes[i] |= ((imag & (1 << int(j / 2))) >> int(j / 2)) << j
+                    assigment_codes[i] |= (imag & (1 << int(j / 2))) >> int(j / 2)
                 else:
-                    assigment_codes[i] |= ((real & (1 << int(j / 2))) >> int(j / 2)) << j
-
+                    assigment_codes[i] |= (real & (1 << int(j / 2))) >> int(j / 2)
         return assigment_codes

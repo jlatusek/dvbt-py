@@ -12,17 +12,30 @@ def test_print_constellation():
 
 
 def test_qam():
-    # Example usage
-    qam_signal = np.array([complex(1, 1), complex(-1, -1), complex(1, -1), complex(-1, 1)])
+    qam = Qam()
+
+    qam_signal = np.array(
+        [
+            complex(8, 8),
+            complex(8, -8),
+            complex(-8, -8),
+            complex(-8, 8),
+            complex(4, 4),
+            complex(4, -4),
+            complex(-4, -4),
+            complex(-4, 4),
+        ]
+    )
+    qam_signal /= np.abs(qam_signal).max()
+    qam_signal *= np.abs(qam._max_point_position)
     plt.figure()
     plt.plot(qam_signal.real, qam_signal.imag, "o")
     plt.title("Signal original")
     plt.show()
 
-    qam = Qam()
     demodulated_signal = qam.demodulate(qam_signal)
     print(demodulated_signal)
-    assert demodulated_signal == np.array([0, 48, 16, 32])
+    assert np.array_equal(demodulated_signal, np.array([0, 2, 3, 1, 60, 62, 63, 61]))
 
 
 def test_generation_64():
