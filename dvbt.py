@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from os.path import join as pjoin
+from pprint import pprint
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -8,6 +9,10 @@ import scipy.io as sio
 import scipy.signal as signal
 
 from dvbt.normalize import normalize_sig
+from dvbt.qam import Qam
+from dvbt.tps import Tps
+
+draw = False
 
 
 def dvb_channel_filter(data: np.array, draw=False):
@@ -50,9 +55,10 @@ n = np.linspace(-0.5, 0.5, N)
 
 # %% Plot fft of received data
 
-plt.semilogy(n, np.abs(np.fft.fftshift(np.fft.fft(data))))
-plt.title("FFT of received data")
-plt.show()
+if draw:
+    plt.semilogy(n, np.abs(np.fft.fftshift(np.fft.fft(data))))
+    plt.title("FFT of received data")
+    plt.show()
 
 
 # %% Mix frequencies to lower frequency of examined signal
@@ -69,22 +75,22 @@ a1 = np.multiply(data[0], c[0])
 print(f"{a1=}")
 
 
-# %%
-
-plt.figure()
-plt.plot(n, 20 * np.log10(np.abs(np.fft.fft(data_low))))
-plt.title("Lowered data FFT")
-plt.show()
+if draw:
+    plt.figure()
+    plt.plot(n, 20 * np.log10(np.abs(np.fft.fft(data_low))))
+    plt.title("Lowered data FFT")
+    plt.show()
 
 
 # %% Filter received data
 
 data_filtered = dvb_channel_filter(data_low, draw=True)
-plt.figure()
-plt.semilogy(n, np.abs(np.fft.fftshift(np.fft.fft(data_filtered))))
-plt.title("Filtered data FFT")
-plt.xlim([-0.3, 0.3])
-plt.show()
+if draw:
+    plt.figure()
+    plt.semilogy(n, np.abs(np.fft.fftshift(np.fft.fft(data_filtered))))
+    plt.title("Filtered data FFT")
+    plt.xlim([-0.3, 0.3])
+    plt.show()
 
 
 # %% Resampling
@@ -95,10 +101,11 @@ data_resampled = signal.resample(data_filtered, int(N * fs_dvb / fs))
 # data_resampled = signal.resample_poly(data_filtered, int(fs_dvb), int(fs))
 N_resampled = len(data_resampled)
 n_resampled = np.linspace(-0.5, 0.5, N_resampled)
-plt.figure(dpi=300)
-plt.semilogy(n_resampled, np.abs(np.fft.fftshift(np.fft.fft(data_resampled))))
-plt.title("Resampled data FFT")
-plt.show()
+if draw:
+    plt.figure()
+    plt.semilogy(n_resampled, np.abs(np.fft.fftshift(np.fft.fft(data_resampled))))
+    plt.title("Resampled data FFT")
+    plt.show()
 
 
 # %% Find symbols
@@ -116,20 +123,21 @@ for i in range(N_resampled):
     corr = np.correlate(first_guard, second_guard)
     correlation[i] = corr[0]
 
-
-plt.figure()
-plt.plot(np.abs(correlation))
-plt.title("Correlation of guards")
-plt.show()
+if draw:
+    plt.figure()
+    plt.plot(np.abs(correlation))
+    plt.title("Correlation of guards")
+    plt.show()
 
 
 # %% Find peaks in data source signal to find beginning of each block
 
 peaks = signal.find_peaks(np.abs(correlation), height=1e9, distance=symbol_per_block)
-plt.figure()
-plt.stem(peaks[0], peaks[1]["peak_heights"])
-plt.title("Peaks in correlation")
-plt.show()
+if draw:
+    plt.figure()
+    plt.stem(peaks[0], peaks[1]["peak_heights"])
+    plt.title("Peaks in correlation")
+    plt.show()
 
 
 # %% Extract symbols
@@ -140,12 +148,13 @@ for idx, val in enumerate(symbol_end):
 
 data_af_fft = np.fft.fft(data_no_guard)
 data_af_fft = np.fft.fftshift(data_af_fft, axes=1)
-plt.figure(figsize=(10, 10))
-plt.plot(data_af_fft[0].real, data_af_fft[0].imag, ".")
-plt.title("Symbol po FFT")
-plt.xlim([-3e5, 3e5])
-plt.ylim([-3e5, 3e5])
-plt.show()
+if draw:
+    plt.figure()
+    plt.plot(data_af_fft[0].real, data_af_fft[0].imag, ".")
+    plt.title("Symbol po FFT")
+    plt.xlim([-3e5, 3e5])
+    plt.ylim([-3e5, 3e5])
+    plt.show()
 
 
 # %% Remove zeros from the beginning and the end of the symbol
@@ -156,18 +165,31 @@ begin_remove = full_symbols[:, 0:688]
 end_remove = full_symbols[:, -687:]
 symbols = full_symbols[:, 688:-687]
 one_symbol = symbols[0]
-plt.figure(figsize=(10, 10))
-plt.plot(one_symbol.real, one_symbol.imag, ".")
-plt.title("Symbol po usunięciu zer")
-plt.xlim([-3e5, 3e5])
-plt.ylim([-3e5, 3e5])
-plt.show()  
+
+if draw:
+    plt.figure(figsize=(10, 10))
+    plt.plot(one_symbol.real, one_symbol.imag, ".")
+    plt.title("Symbol po usunięciu zer")
+    plt.xlim([-3e5, 3e5])
+    plt.ylim([-3e5, 3e5])
+    plt.show()
 
 
 # %% Normalizowanie sygnału
 ind = 1
 l = 3
-normalize_sig(symbols[0], l, draw=True)
-# for ind in range(len(symbols)):
-#     normalize_sig(symbols[ind], l)
-#     l = l + 1
+normalized = normalize_sig(symbols[0], l, draw=True)
+
+# %% QAM demodulation
+qam = Qam()
+demodulated = qam.demodulate(normalized)
+qam.draw_constellation()
+plt.figure()
+plt.scatter(normalized.real, normalized.imag, marker=".", color="blue")
+plt.scatter(qam.constellation.real, qam.constellation.imag, color="red", marker="o")
+plt.show()
+
+# %% TPS extraction
+
+information = Tps.extract(demodulated)
+pprint(information)
