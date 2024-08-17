@@ -1,5 +1,4 @@
 import numpy as np
-from matplotlib import pyplot as plt
 
 from dvbt.qam import Qam
 
@@ -11,7 +10,7 @@ def test_print_constellation():
     assert True
 
 
-def test_qam():
+def test_qam_64():
     qam = Qam()
 
     qam_signal = np.array(
@@ -28,14 +27,31 @@ def test_qam():
     )
     qam_signal /= np.abs(qam_signal).max()
     qam_signal *= np.abs(qam._max_point_position)
-    plt.figure()
-    plt.plot(qam_signal.real, qam_signal.imag, "o")
-    plt.title("Signal original")
-    plt.show()
 
     demodulated_signal = qam.demodulate(qam_signal)
-    print(demodulated_signal)
     assert np.array_equal(demodulated_signal, np.array([0, 2, 3, 1, 60, 62, 63, 61]))
+
+
+def test_qam_16():
+    qam = Qam(16)
+
+    qam_signal = np.array(
+        [
+            complex(4, 4),
+            complex(4, -4),
+            complex(-4, -4),
+            complex(-4, 4),
+            complex(2, 2),
+            complex(2, -2),
+            complex(-2, -2),
+            complex(-2, 2),
+        ]
+    )
+    qam_signal /= np.abs(qam_signal).max()
+    qam_signal *= np.abs(qam._max_point_position)
+
+    demodulated_signal = qam.demodulate(qam_signal)
+    assert np.array_equal(demodulated_signal, np.array([0, 2, 3, 1, 12, 14, 15, 13]))
 
 
 def test_generation_64():
