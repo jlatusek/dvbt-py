@@ -61,7 +61,7 @@ def normalize_sig(sym, symbol_number, draw=False):
     xfit = np.arange(6817)
     interpol = np.interp(xfit, all_pilot, ilor)
     if draw:
-        plt.figure(dpi=300)
+        plt.figure()
         plt.plot(abs(interpol))
         plt.title("Estymacja kanału")
         plt.show()
@@ -71,7 +71,7 @@ def normalize_sig(sym, symbol_number, draw=False):
     data_normalized = sym / interpol
 
     if draw:
-        plt.figure(dpi=300)
+        plt.figure()
         plt.plot(data_normalized.real, data_normalized.imag, ".", markersize=1)
         plt.title("Symbol kompensacji kanału")
         plt.show()
