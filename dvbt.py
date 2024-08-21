@@ -8,35 +8,14 @@ import numpy as np
 import scipy.io as sio
 import scipy.signal as signal
 
+import dvbt.dvbt as dvbt
 from dvbt.normalize import normalize_sig
 from dvbt.qam import Qam
 from dvbt.tps import Tps
 
 draw = False
 
-
-def dvb_channel_filter(data: np.array, draw=False):
-    cutoff = 7e6  # Pass band Frequency
-    fs = 30000000  # Sampling FrequencyV
-    h = signal.firwin(100, cutoff, fs=fs)
-    filtered_data = signal.lfilter(h, 1.0, data)
-    if draw:
-        w, h = signal.freqz(h, 1.0, worN=8000)
-        plt.semilogy(w / np.pi, abs(h))
-        plt.title("Filter Frequency Response")
-        plt.xlabel("Frequency (Hz)")
-        plt.ylabel("Gain")
-        plt.grid(True)
-        plt.show()
-        # Plot phase response
-        plt.plot(w / np.pi, np.unwrap(np.angle(h)))
-        plt.title("Filter Phase Response")
-        plt.xlabel("Frequency (Hz)")
-        plt.ylabel("Phase")
-        plt.grid(True)
-        plt.show()
-    return filtered_data
-
+draw = True
 
 # %% Load data
 
@@ -52,7 +31,6 @@ data = data[0:100000]
 N = len(data)
 n = np.linspace(-0.5, 0.5, N)
 
-
 # %% Plot fft of received data
 
 if draw:
@@ -60,20 +38,9 @@ if draw:
     plt.title("FFT of received data")
     plt.show()
 
-
 # %% Mix frequencies to lower frequency of examined signal
 
-fo = 8e6 / fs
-k = np.arange(1, len(data) + 1)
-c = np.exp(1j * (2 * np.pi * fo * k))
-data_low = data * c
-
-a = data[0] * c[0]
-b = data[1] * c[1]
-print(f"{data_low[0]=}\n{a=}\n{b=}\n{data[0]=}\n{c[0]=}")
-a1 = np.multiply(data[0], c[0])
-print(f"{a1=}")
-
+data_low = dvbt.mix_frequencies(data, fs, fc)
 
 if draw:
     plt.figure()
@@ -84,14 +51,14 @@ if draw:
 
 # %% Filter received data
 
-data_filtered = dvb_channel_filter(data_low, draw=True)
+data_filtered = dvbt.channel_filter(data_low, draw=False)
+
 if draw:
     plt.figure()
     plt.semilogy(n, np.abs(np.fft.fftshift(np.fft.fft(data_filtered))))
     plt.title("Filtered data FFT")
     plt.xlim([-0.3, 0.3])
     plt.show()
-
 
 # %% Resampling
 
@@ -106,7 +73,6 @@ if draw:
     plt.semilogy(n_resampled, np.abs(np.fft.fftshift(np.fft.fft(data_resampled))))
     plt.title("Resampled data FFT")
     plt.show()
-
 
 # %% Find symbols
 
@@ -129,7 +95,6 @@ if draw:
     plt.title("Correlation of guards")
     plt.show()
 
-
 # %% Find peaks in data source signal to find beginning of each block
 
 peaks = signal.find_peaks(np.abs(correlation), height=1e9, distance=symbol_per_block)
@@ -138,7 +103,6 @@ if draw:
     plt.stem(peaks[0], peaks[1]["peak_heights"])
     plt.title("Peaks in correlation")
     plt.show()
-
 
 # %% Extract symbols
 symbol_end = np.arange(peaks[0][0] + frame_len, len(data_resampled), 8192 + 1024, dtype=int)

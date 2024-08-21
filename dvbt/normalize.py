@@ -60,19 +60,13 @@ def normalize_sig(sym, symbol_number, draw=False):
     ilor = sym[all_pilot] / pilots_sequence[all_pilot]
     xfit = np.arange(6817)
     interpol = np.interp(xfit, all_pilot, ilor)
-    if draw:
-        plt.figure()
-        plt.plot(abs(interpol))
-        plt.title("Estymacja kanału")
-        plt.show()
 
     # %% Signal normalization
-
     data_normalized = sym / interpol
 
     if draw:
         plt.figure()
         plt.plot(data_normalized.real, data_normalized.imag, ".", markersize=1)
-        plt.title("Symbol kompensacji kanału")
+        plt.title("Signal after normalization and channel compensation")
         plt.show()
     return data_normalized
