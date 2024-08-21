@@ -61,13 +61,10 @@ if draw:
 
 # %% Resampling
 
-B = 8e6
-fs_dvb = 8 / 7 * B
-data_resampled = signal.resample(data_filtered, int(N * fs_dvb / fs))
-# data_resampled = signal.resample_poly(data_filtered, int(fs_dvb), int(fs))
+data_resampled = dvbt.resample(data_filtered, fs)
 N_resampled = len(data_resampled)
-n_resampled = np.linspace(-0.5, 0.5, N_resampled)
 if draw:
+    n_resampled = np.linspace(-0.5, 0.5, N_resampled)
     plt.figure()
     plt.semilogy(n_resampled, np.abs(np.fft.fftshift(np.fft.fft(data_resampled))))
     plt.title("Resampled data FFT")
@@ -118,7 +115,6 @@ if draw:
     plt.xlim([-3e5, 3e5])
     plt.ylim([-3e5, 3e5])
     plt.show()
-
 
 # %% Remove zeros from the beginning and the end of the symbol
 

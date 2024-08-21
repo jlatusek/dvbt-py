@@ -33,3 +33,11 @@ def mix_frequencies(data: npt.NDArray[np.complex64], fs: int, fo: int) -> npt.ND
     c = np.exp(1j * (2 * np.pi * fo * k))
     data_low = data * c
     return data_low
+
+
+def resample(data: np.array, fs: int):
+    N = len(data)
+    B = 8e6
+    fs_dvb = 8 / 7 * B
+    data_resampled = signal.resample(data, int(N * fs_dvb / fs))
+    return data_resampled
