@@ -47,7 +47,6 @@ if draw:
     plt.title("Lowered data FFT")
     plt.show()
 
-
 # %% Filter received data
 
 data_filtered = dvbt.channel_filter(data_low, draw=False)
@@ -72,67 +71,7 @@ if draw:
 
 # %% Find symbols
 
-symbol_per_block = 8192
-guard_interval = 1 / 8
-guard_symbols = int(symbol_per_block * guard_interval)
-frame_len = int(symbol_per_block + guard_symbols)
-correlation = np.zeros(N_resampled, dtype=complex)
-for i in range(N_resampled):
-    if i + symbol_per_block + guard_symbols > N_resampled:
-        break
-    first_guard = data_resampled[i : i + guard_symbols]
-    second_guard = data_resampled[i + symbol_per_block : i + symbol_per_block + guard_symbols]
-    corr = np.correlate(first_guard, second_guard)
-    correlation[i] = corr[0]
-
-if draw:
-    plt.figure()
-    plt.plot(np.abs(correlation))
-    plt.title("Correlation of guards")
-    plt.show()
-
-# %% Find peaks in data source signal to find beginning of each block
-
-peaks = signal.find_peaks(np.abs(correlation), height=1e9, distance=symbol_per_block)
-if draw:
-    plt.figure()
-    plt.stem(peaks[0], peaks[1]["peak_heights"])
-    plt.title("Peaks in correlation")
-    plt.show()
-
-# %% Extract symbols
-symbol_end = np.arange(peaks[0][0] + frame_len, len(data_resampled), 8192 + 1024, dtype=int)
-data_no_guard = np.empty((len(symbol_end), 8192), dtype=complex)
-for idx, val in enumerate(symbol_end):
-    data_no_guard[idx] = data_resampled[val - 8192 : val]
-
-data_af_fft = np.fft.fft(data_no_guard)
-data_af_fft = np.fft.fftshift(data_af_fft, axes=1)
-if draw:
-    plt.figure()
-    plt.plot(data_af_fft[0].real, data_af_fft[0].imag, ".")
-    plt.title("Symbol po FFT")
-    plt.xlim([-3e5, 3e5])
-    plt.ylim([-3e5, 3e5])
-    plt.show()
-
-# %% Remove zeros from the beginning and the end of the symbol
-
-full_symbols = data_af_fft
-# % symbols = fftshift(data_af_fft);
-begin_remove = full_symbols[:, 0:688]
-end_remove = full_symbols[:, -687:]
-symbols = full_symbols[:, 688:-687]
-one_symbol = symbols[0]
-
-if draw:
-    plt.figure(figsize=(10, 10))
-    plt.plot(one_symbol.real, one_symbol.imag, ".")
-    plt.title("Symbol po usunięciu zer")
-    plt.xlim([-3e5, 3e5])
-    plt.ylim([-3e5, 3e5])
-    plt.show()
-
+symbols = dvbt.find_symbol(data_resampled, draw=draw)
 
 # %% Normalizowanie sygnału
 ind = 1
