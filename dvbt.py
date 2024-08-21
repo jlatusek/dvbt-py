@@ -18,13 +18,12 @@ draw = False
 draw = True
 
 # %% Load data
-
-dvbt_data = sio.loadmat(pjoin("data", "dvbt.mat"))
-fc = dvbt_data["fc"][0][0]
-f1 = dvbt_data["f1"][0][0]
-f2 = dvbt_data["f2"][0][0]
-fs = dvbt_data["fs"][0][0]
-data = np.squeeze(dvbt_data["data"])
+data = np.load(pjoin("data", "dvbt.npz"))
+fc = data["fc"]
+f1 = data["f1"]
+f2 = data["f2"]
+fs = data["fs"]
+data = data["data"]
 
 # For testing purposes limit number of processed data
 data = data[0:100000]
