@@ -11,7 +11,7 @@ def main():
     f2 = dvbt_data["f2"][0][0]
     fs = dvbt_data["fs"][0][0]
     data = np.squeeze(dvbt_data["data"])
-    np.savez(pjoin("data", "dvbt_data.npz"), fc=fc, f1=f1, f2=f2, fs=fs, data=data)
+    np.savez_compressed(pjoin("data", "dvbt.npz"), fc=fc, f1=f1, f2=f2, fs=fs, data=data)
 
 
 if __name__ == "__main__":
