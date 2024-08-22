@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from os.path import join as pjoin
 
 import numpy as np
